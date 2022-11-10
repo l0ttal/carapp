@@ -6,6 +6,10 @@ import 'ag-grid-community/styles/ag-theme-material.css';
 
 import Button from '@mui/material/Button';
 
+import Addcar from "./Addcar";
+import Editcar from "./Editcar";
+import { API_URL } from '../constants';
+
 function Carlist() {
 	const [cars, setCars] = useState([]);
 
@@ -43,9 +47,13 @@ function Carlist() {
 			width: 150,
 		},
 		{
-			width: 150,
+			width: 120,
+			cellRenderer: params => <Editcar data={params.data} updatecar={updatecar} />
+		},
+		{
+			width: 120,
 			cellRenderer: params =>
-				<Button color="error" size="small" onClick={() => deleteCar(params.data)}>Delete</Button>,
+				<Button color="error" size="small" onClick={() => deleteCar(params.data)}>Delete</Button>
 		},
 	])
 
@@ -54,7 +62,7 @@ function Carlist() {
 	}, []);
 
 	const getCars = () => {
-		fetch('http://carrestapi.herokuapp.com/cars')
+		fetch(API_URL)
 			.then(response => {
 				if (response.ok) {
 					return response.json();
@@ -80,13 +88,49 @@ function Carlist() {
 		}
 	}
 
+	const addcar = (car) => {
+		fetch(API_URL, {
+			method: 'POST',
+			headers: { 'Content-type': 'application/json' },
+			body: JSON.stringify(car),
+		})
+			.then(response => {
+				if (response.ok) {
+					getCars();
+				} else {
+					alert('Something went wrong with adding the car');
+				}
+			})
+			.catch(err => console.error(err))
+	}
+
+	const updatecar = (car, url) => {
+		fetch(url, {
+			method: 'PUT',
+			headers: { 'Content-type': 'application/json' },
+			body: JSON.stringify(car),
+		})
+			.then(response => {
+				if (response.ok) {
+					getCars();
+				} else {
+					alert('Something went wrong with updating the car');
+				}
+			})
+			.catch(err => console.error(err))
+	}
+
 	return (
-		<div className="ag-theme-material" style={{ height: 620, width: '90%', margin: 'auto' }}>
-			<AgGridReact rowData={cars}
-				columnDefs={columnDefs}
-				pagination={true}
-				paginationPageSize={10} />
-		</div>
+		<>
+			<Addcar addCar={addcar} />
+			<div className="ag-theme-material" style={{ height: 620, width: '90%', margin: 'auto' }}>
+				<AgGridReact rowData={cars}
+					columnDefs={columnDefs}
+					pagination={true}
+					suppressCellFocus={true}
+					paginationPageSize={10} />
+			</div>
+		</>
 	)
 }
 
